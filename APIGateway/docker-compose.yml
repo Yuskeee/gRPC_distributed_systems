@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  api_gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.api_gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - REDIS_URL=redis://redis:6379
+
+  # sse:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.sse
+  #   ports:
+  #     - "5000:5000"
+  #   depends_on:
+  #     - rabbitmq
+  #     - redis
+  #   environment:
+  #     - RABBITMQ_HOST=rabbitmq
+  #     - REDIS_URL=redis://redis:6379
+
+  # notification:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.notification
+  #   ports:
+  #     - "5001:5001"
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_started
+  #   environment:
+  #     - RABBITMQ_HOST=rabbitmq
+  #     - REDIS_URL=redis://redis:6379

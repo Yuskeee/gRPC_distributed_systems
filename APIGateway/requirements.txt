@@ -1,0 +1,8 @@
+Flask
+flask-sse
+flask-cors
+redis
+gunicorn
+gevent
+pika
+requests

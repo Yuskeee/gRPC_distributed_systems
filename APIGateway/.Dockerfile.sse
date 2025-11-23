@@ -1,0 +1,14 @@
+# # Dockerfile.sse
+# FROM python:3.9
+
+# WORKDIR /app
+
+# COPY . /app
+
+# # Install gevent for async workers (required for Flask-SSE)
+# RUN pip install Flask flask_sse flask-cors redis gunicorn gevent
+
+# EXPOSE 5000
+
+# # Use gevent worker class with appropriate timeout
+# CMD ["gunicorn", "-k", "gevent", "-w", "1", "--worker-connections", "1000", "--timeout", "120", "-b", "0.0.0.0:5000", "sse:app"]
