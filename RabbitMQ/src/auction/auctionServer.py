@@ -3,19 +3,26 @@ from concurrent import futures
 import sched
 import time
 import threading
+import os
+import sys
+
 import auction_pb2
 import auction_pb2_grpc
+from bid import bid_pb2, bid_pb2_grpc
 
 class AuctionService(auction_pb2_grpc.AuctionServiceServicer):
     def __init__(self):
         self.auctions = []
         self.current_id = 0
         self.lock = threading.Lock()
-        
+
+        self.bid_channel = grpc.insecure_channel("localhost:50052")
+        self.bid_stub = bid_pb2_grpc.BidServiceStub(self.bid_channel)
+
         # Scheduler
         self.scheduler = sched.scheduler(time.time, time.sleep)
         self.running = True
-        
+
         self.sched_thread = threading.Thread(target=self._run_scheduler, daemon=True)
         self.sched_thread.start()
 
@@ -59,10 +66,35 @@ class AuctionService(auction_pb2_grpc.AuctionServiceServicer):
                 if auction.status == "pending" and now >= auction.start_time.seconds:
                     auction.status = "active"
                     print(f"Auction {auction.id} started.")
-                
+
+                    # Notify BidService that an auction has started
+                    try:
+                        self.bid_stub.AuctionStarted(
+                            bid_pb2.AuctionEventRequest(auction_id=auction.id)
+                        )
+                    except Exception as e:
+                        print(f"[AuctionService] Failed to notify BidService about start: {e}")
+
                 elif auction.status == "active" and now >= auction.end_time.seconds:
                     auction.status = "closed"
                     print(f"Auction {auction.id} finished.")
+
+                    # Notify BidService that an auction has closed and log winner info
+                    try:
+                        resp = self.bid_stub.AuctionClosed(
+                            bid_pb2.AuctionEventRequest(auction_id=auction.id)
+                        )
+                        if resp.has_winner:
+                            print(
+                                f"[AuctionService] Winner for auction {resp.auction_id}: "
+                                f"{resp.winner_id[:8]}... with {resp.value:.2f}"
+                            )
+                        else:
+                            print(
+                                f"[AuctionService] Auction {resp.auction_id} closed with no winner."
+                            )
+                    except Exception as e:
+                        print(f"[AuctionService] Failed to notify BidService about close: {e}")
 
     def stop(self):
         self.running = False

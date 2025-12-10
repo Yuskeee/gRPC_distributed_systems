@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+message AuctionEventRequest {
+  int32 auction_id = 1;
+}
+
+message AuctionEventAck {
+  bool success = 1;
+  string message = 2;
+}
+
+message AuctionClosedResponse {
+  int32 auction_id = 1;
+  bool has_winner = 2;
+  string winner_id = 3;
+  double value = 4;
+}
+
+message PlaceBidRequest {
+  int32 auction_id = 1;
+  string user_id = 2;
+  double amount = 3;
+}
+
+message PlaceBidResponse {
+  bool accepted = 1;
+  string reason = 2;
+  int32 auction_id = 3;
+  string user_id = 4;
+  double amount = 5;
+}
+
+service BidService {
+  // Called when an auction becomes active
+  rpc AuctionStarted(AuctionEventRequest) returns (AuctionEventAck);
+
+  // Called when an auction is closed; returns winner (if any)
+  rpc AuctionClosed(AuctionEventRequest) returns (AuctionClosedResponse);
+
+  // Called by clients to place a bid
+  rpc PlaceBid(PlaceBidRequest) returns (PlaceBidResponse);
+}
