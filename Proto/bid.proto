@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package bid;
+
+import "auction.proto";
+
+message AuctionEventRequest {
+  int32 auction_id = 1;
+}
+
+message AuctionClosedResponse {
+  int32 auction_id = 1;
+  bool has_winner = 2;
+  string winner_id = 3;
+  double value = 4;
+}
+
+message PlaceBidRequest {
+  int32 auction_id = 1;
+  string user_id = 2;
+  double amount = 3;
+}
+
+message PlaceBidResponse {
+  bool accepted = 1;
+  string reason = 2;
+  int32 auction_id = 3;
+  string user_id = 4;
+  double amount = 5;
+}
+
+message PaymentLinkNotification {
+  int32 auction_id = 1;
+  string customer_id = 2;
+  string payment_link = 3;
+  string transaction_id = 4;
+  string status = 5;
+  double value = 6;
+}
+
+message BidEventAck {
+  bool success = 1;
+  string message = 2;
+}
+
+service BidService {
+  rpc AuctionStarted(AuctionEventRequest) returns (auction.AuctionEventAck);
+  rpc AuctionClosed(AuctionEventRequest) returns (AuctionClosedResponse);
+  rpc PlaceBid(PlaceBidRequest) returns (PlaceBidResponse);
+}
+
+service BidCallbackService {
+  rpc OnPaymentLinkGenerated(PaymentLinkNotification) returns (BidEventAck);
+}

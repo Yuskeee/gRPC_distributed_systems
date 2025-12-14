@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package payment;
+
+message AuctionWinnerRequest {
+  int32 auction_id = 1;
+  string winner_id = 2;
+  double value = 3;
+  string currency = 4;
+}
+
+message PaymentLinkResponse {
+  bool success = 1;
+  string message = 2;
+  int32 auction_id = 3;
+  string customer_id = 4;
+  string payment_link = 5;
+  string transaction_id = 6;
+  string status = 7;
+}
+
+message PaymentStatusUpdate {
+  string transaction_id = 1;
+  int32 auction_id = 2;
+  string customer_id = 3;
+  string status = 4;  // "pending", "approved", "declined", "cancelled"
+  double value = 5;
+}
+
+message PaymentStatusAck {
+  bool success = 1;
+  string message = 2;
+}
+
+message PaymentQueryRequest {
+  string transaction_id = 1;
+}
+
+message PaymentQueryResponse {
+  bool found = 1;
+  string transaction_id = 2;
+  int32 auction_id = 3;
+  string customer_id = 4;
+  string status = 5;
+  double value = 6;
+  string payment_link = 7;
+}
+
+message PaymentLinkNotification {
+  int32 auction_id = 1;
+  string customer_id = 2;
+  string payment_link = 3;
+  string transaction_id = 4;
+  string status = 5;
+  double value = 6;
+}
+
+message PaymentStatusNotification {
+  string transaction_id = 1;
+  int32 auction_id = 2;
+  string customer_id = 3;
+  string status = 4;
+  double value = 5;
+}
+
+message NotificationAck {
+  bool success = 1;
+  string message = 2;
+}
+
+service PaymentService {
+  rpc ProcessAuctionWinner(AuctionWinnerRequest) returns (PaymentLinkResponse);
+  
+  rpc UpdatePaymentStatus(PaymentStatusUpdate) returns (PaymentStatusAck);
+  
+  rpc GetPaymentStatus(PaymentQueryRequest) returns (PaymentQueryResponse);
+}
+
+service PaymentNotificationService {
+  rpc OnPaymentLinkCreated(PaymentLinkNotification) returns (NotificationAck);
+  
+  rpc OnPaymentStatusChanged(PaymentStatusNotification) returns (NotificationAck);
+}

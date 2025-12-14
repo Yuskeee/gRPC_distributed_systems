@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package auction;
+
+import "google/protobuf/timestamp.proto";
+
+message Auction {
+  int32 id = 1;
+  string description = 2;
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+  string status = 5;  // "pending", "active", "closed"
+}
+
+message CreateAuctionRequest {
+  string description = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+}
+
+message ListAuctionsRequest {
+  string filter = 1;
+}
+
+message ListAuctionsResponse {
+  repeated Auction auctions = 1;
+}
+
+message GetAuctionRequest {
+  int32 auction_id = 1;
+}
+
+message GetAuctionResponse {
+  bool found = 1;
+  Auction auction = 2;
+}
+
+message AuctionStartedNotification {
+  int32 auction_id = 1;
+  google.protobuf.Timestamp start_time = 2;
+}
+
+message AuctionClosedNotification {
+  int32 auction_id = 1;
+  bool has_winner = 2;
+  string winner_id = 3;
+  double winning_value = 4;
+  google.protobuf.Timestamp end_time = 5;
+}
+
+message AuctionEventAck {
+  bool success = 1;
+  string message = 2;
+}
+
+service AuctionService {
+  rpc CreateAuction(CreateAuctionRequest) returns (Auction);
+  rpc ListAuctions(ListAuctionsRequest) returns (ListAuctionsResponse);
+  rpc GetAuction(GetAuctionRequest) returns (GetAuctionResponse);
+}
+
+service AuctionCallbackService {
+  rpc OnAuctionStarted(AuctionStartedNotification) returns (AuctionEventAck);
+  rpc OnAuctionClosed(AuctionClosedNotification) returns (AuctionEventAck);
+}

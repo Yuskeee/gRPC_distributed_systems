@@ -12,7 +12,6 @@ app = Flask(__name__)
 # Simula um banco de dados de transações
 transactions = {}
 
-
 @app.route('/api/payment/create', methods=['POST'])
 def create_payment():
     """

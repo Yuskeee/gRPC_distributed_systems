@@ -1,0 +1,156 @@
+syntax = "proto3";
+
+package gateway;
+
+import "google/protobuf/timestamp.proto";
+import "bid.proto";
+
+message Auction {
+  int32 id = 1;
+  string description = 2;
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+  string status = 5;
+}
+
+message NewBidPayload {
+  int32 auction_id = 1;
+  string user_id = 2;
+  double amount = 3;
+  google.protobuf.Timestamp timestamp = 4;
+}
+
+message InvalidBidPayload {
+  int32 auction_id = 1;
+  string user_id = 2;
+  string reason = 3;
+  double attempted_amount = 4;
+}
+
+message AuctionWinnerPayload {
+  int32 auction_id = 1;
+  string winner_id = 2;
+  double value = 3;
+  bool is_winner = 4;
+}
+
+message PaymentLinkPayload {
+  int32 auction_id = 1;
+  string customer_id = 2;
+  string payment_link = 3;
+  string transaction_id = 4;
+  string status = 5;
+  double value = 6;
+}
+
+message PaymentStatusPayload {
+  string transaction_id = 1;
+  int32 auction_id = 2;
+  string customer_id = 3;
+  string status = 4;
+  double value = 5;
+}
+
+message KeepAlivePayload {
+  string status = 1;
+  google.protobuf.Timestamp server_time = 2;
+}
+
+message Notification {
+  enum EventType {
+    KEEPALIVE = 0;
+    NEW_BID = 1;
+    INVALID_BID = 2;
+    AUCTION_WINNER = 3;
+    PAYMENT_LINK = 4;
+    PAYMENT_STATUS = 5;
+  }
+  
+  EventType event_type = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  
+  oneof payload {
+    KeepAlivePayload keepalive = 10;
+    NewBidPayload new_bid = 11;
+    InvalidBidPayload invalid_bid = 12;
+    AuctionWinnerPayload auction_winner = 13;
+    PaymentLinkPayload payment_link = 14;
+    PaymentStatusPayload payment_status = 15;
+  }
+}
+
+message RegisterInterestRequest {
+  int32 auction_id = 1;
+  string user_id = 2;
+}
+
+message InterestResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message NotificationSubscribeRequest {
+  string user_id = 1;
+  repeated int32 auction_ids = 2;
+}
+
+message CreateAuctionRequest {
+  string description = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+}
+
+message CreateAuctionResponse {
+  bool success = 1;
+  string message = 2;
+  Auction auction = 3;
+}
+
+message ListAuctionsRequest {
+  enum Filter {
+    ALL = 0;
+    ACTIVE = 1;
+    CLOSED = 2;
+    PENDING = 3;
+  }
+  Filter filter = 1;
+}
+
+message ListAuctionsResponse {
+  repeated Auction auctions = 1;
+  int32 total_count = 2;
+}
+
+message GetAuctionRequest {
+  int32 auction_id = 1;
+}
+
+message GetAuctionResponse {
+  bool found = 1;
+  Auction auction = 2;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1;
+  string service = 2;
+  int32 active_connections = 3;
+  int32 registered_interests = 4;
+  google.protobuf.Timestamp uptime = 5;
+}
+
+service GatewayService {
+  rpc RegisterInterest(RegisterInterestRequest) returns (InterestResponse);
+  rpc CancelInterest(RegisterInterestRequest) returns (InterestResponse);
+  
+  rpc SubscribeNotifications(NotificationSubscribeRequest) returns (stream Notification);
+  
+  rpc CreateAuction(CreateAuctionRequest) returns (CreateAuctionResponse);
+  rpc ListAuctions(ListAuctionsRequest) returns (ListAuctionsResponse);
+  rpc GetAuction(GetAuctionRequest) returns (GetAuctionResponse);
+  
+  rpc PlaceBid(bid.PlaceBidRequest) returns (bid.PlaceBidResponse);
+  
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
