@@ -23,27 +23,13 @@ message PaymentStatusUpdate {
   string transaction_id = 1;
   int32 auction_id = 2;
   string customer_id = 3;
-  string status = 4;  // "pending", "approved", "declined", "cancelled"
+  string status = 4; // "pending", "approved", "declined", "cancelled"
   double value = 5;
 }
 
 message PaymentStatusAck {
   bool success = 1;
   string message = 2;
-}
-
-message PaymentQueryRequest {
-  string transaction_id = 1;
-}
-
-message PaymentQueryResponse {
-  bool found = 1;
-  string transaction_id = 2;
-  int32 auction_id = 3;
-  string customer_id = 4;
-  string status = 5;
-  double value = 6;
-  string payment_link = 7;
 }
 
 message PaymentLinkNotification {
@@ -72,8 +58,6 @@ service PaymentService {
   rpc ProcessAuctionWinner(AuctionWinnerRequest) returns (PaymentLinkResponse);
   
   rpc UpdatePaymentStatus(PaymentStatusUpdate) returns (PaymentStatusAck);
-  
-  rpc GetPaymentStatus(PaymentQueryRequest) returns (PaymentQueryResponse);
 }
 
 service PaymentNotificationService {

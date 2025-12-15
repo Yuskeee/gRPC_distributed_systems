@@ -140,7 +140,7 @@ class BidService(bid_pb2_grpc.BidServiceServicer):
                 value=value
             )
             
-            response = self.gateway_stub.OnPaymentLinkGenerated(notification, timeout=15.0)
+            response = self.gateway_stub.OnPaymentLinkGenerated(notification, timeout=60.0)
             
             if response.success:
                 print(f"[BidService] ✓ Gateway notified about payment link")

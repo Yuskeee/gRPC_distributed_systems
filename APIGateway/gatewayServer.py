@@ -12,7 +12,10 @@ from gevent import monkey
 from gevent.pywsgi import WSGIServer
 from concurrent import futures
 
-monkey.patch_all(thread=False)
+monkey.patch_all()
+
+import grpc.experimental.gevent as grpc_gevent
+grpc_gevent.init_gevent()
 
 import grpc
 import sys

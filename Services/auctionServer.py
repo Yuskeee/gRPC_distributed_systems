@@ -139,11 +139,9 @@ class AuctionService(auction_pb2_grpc.AuctionServiceServicer):
         
         with self.lock:
             for auction in self.auctions:
-                # Converte Timestamps para Unix timestamps
                 start_unix = timestamp_to_datetime(auction.start_time).timestamp()
                 end_unix = timestamp_to_datetime(auction.end_time).timestamp()
                 
-                # Leilão iniciando
                 if auction.status == "pending" and now >= start_unix:
                     auction.status = "active"
                     print(f"[AuctionService] Auction {auction.id} STARTED")
@@ -161,7 +159,6 @@ class AuctionService(auction_pb2_grpc.AuctionServiceServicer):
                     # Notifica Gateway via callback gRPC
                     self._notify_gateway_auction_started(auction.id, auction.start_time)
 
-                # Leilão encerrando
                 elif auction.status == "active" and now >= end_unix:
                     auction.status = "closed"
                     print(f"[AuctionService] Auction {auction.id} CLOSED")

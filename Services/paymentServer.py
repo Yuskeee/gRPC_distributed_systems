@@ -126,33 +126,6 @@ class PaymentServicer(payment_pb2_grpc.PaymentServiceServicer):
                 message=error_msg
             )
     
-    def GetPaymentStatus(self, request, context):
-        try:
-            transaction_id = request.transaction_id
-            
-            if transaction_id in self.payments:
-                payment = self.payments[transaction_id]
-                return payment_pb2.PaymentQueryResponse(
-                    found=True,
-                    transaction_id=transaction_id,
-                    auction_id=payment.get("auction_id", 0),
-                    customer_id=payment.get("customer_id", ""),
-                    status=payment.get("status", "unknown"),
-                    value=payment.get("value", 0.0),
-                    payment_link=payment.get("payment_link", "")
-                )
-            else:
-                return payment_pb2.PaymentQueryResponse(
-                    found=False,
-                    transaction_id=transaction_id
-                )
-                
-        except Exception as e:
-            print(f"[PaymentServer] Error querying payment: {e}")
-            context.set_code(grpc.StatusCode.INTERNAL)
-            context.set_details(str(e))
-            return payment_pb2.PaymentQueryResponse(found=False)
-    
     def _notify_payment_status_change(self, payment_update):
         pass
 
