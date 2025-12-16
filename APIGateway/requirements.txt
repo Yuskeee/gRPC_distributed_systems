@@ -1,8 +1,11 @@
 Flask
 flask-sse
 flask-cors
-redis
-gunicorn
+# redis
+# gunicorn
 gevent
-pika
-requests
+# pika
+# requests
+
+grpcio
+grpcio-tools
